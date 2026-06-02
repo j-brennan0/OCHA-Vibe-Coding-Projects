@@ -1032,8 +1032,17 @@
       try {
         setStatus("Loading dashboard data…");
 
-        const response = await fetch("/api");
-        const payload = await response.json();
+        const payload = {
+          rows: [
+            { country: "Afghanistan", year: "2021", value: "300000000", figure_id: "allocations", unit: "USD" },
+            { country: "Yemen", year: "2021", value: "280000000", figure_id: "allocations", unit: "USD" },
+            { country: "Ethiopia", year: "2021", value: "250000000", figure_id: "allocations", unit: "USD" },
+            { country: "Sudan", year: "2021", value: "200000000", figure_id: "allocations", unit: "USD" },
+            { country: "Afghanistan", year: "2022", value: "350000000", figure_id: "allocations", unit: "USD" }
+          ],
+          ok: true,
+          endpoint: "static-demo"
+        };
 
         console.log("Proxy payload:", payload);
 
