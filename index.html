@@ -43,18 +43,10 @@
       line-height: 1.4;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-    a:hover {
-      text-decoration: underline;
-    }
-
-    button, select {
-      font: inherit;
-    }
+    button, select { font: inherit; }
 
     .header {
       background: var(--primary);
@@ -92,9 +84,7 @@
       font-weight: 500;
     }
 
-    .header button:hover {
-      opacity: 0.92;
-    }
+    .header button:hover { opacity: 0.92; }
 
     .banner {
       font-size: 12px;
@@ -408,7 +398,7 @@
         </div>
 
         <div class="section">
-          <h3>Casualties by Organization</h3>
+          <h3>Affected by Organization Category</h3>
           <canvas id="barChart"></canvas>
         </div>
 
@@ -427,7 +417,7 @@
                 <th>Country</th>
                 <th>Year</th>
                 <th>Motive</th>
-                <th>Organization</th>
+                <th>Total Killed</th>
                 <th>Total Affected</th>
               </tr>
             </thead>
@@ -458,12 +448,12 @@
 
       <div class="footer-block">
         <div class="footer-title">Data &amp; Attribution</div>
-        <div>Data may come from multiple sources and may contain limitations or varying levels of detail.</div>
+        <div>Data may contain limitations or varying levels of detail.</div>
         <div class="socials">
-          <a class="social-link" href="https://x.com/OCHA" target="_blank" rel="noopener noreferrer" aria-label="OCHA on X">X</a>
-          <a class="social-link" href="https://www.linkedin.com/company/un-ocha/" target="_blank" rel="noopener noreferrer" aria-label="OCHA on LinkedIn">in</a>
-          <a class="social-link" href="https://www.facebook.com/UNOCHA/" target="_blank" rel="noopener noreferrer" aria-label="OCHA on Facebook">f</a>
-          <a class="social-link" href="https://www.youtube.com/@UNOCHA" target="_blank" rel="noopener noreferrer" aria-label="OCHA on YouTube">▶</a>
+          <a class="social-link" href="https://x.com/OCHA" target="_blank" rel="noopener noreferrer" aria-label="X">X</a>
+          <a class="social-link" href="https://www.linkedin.com/company/un-ocha/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
+          <a class="social-link" href="https://www.facebook.com/UNOCHA/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
+          <a class="social-link" href="https://www.youtube.com/@UNOCHA" target="_blank" rel="noopener noreferrer" aria-label="YouTube">▶</a>
         </div>
       </div>
     </div>
@@ -492,38 +482,9 @@
     countryFilter.addEventListener("change", applyFilters);
     yearFilter.addEventListener("change", applyFilters);
 
-    function normalizeKey(key) {
-      return String(key || "")
-        .trim()
-        .toLowerCase()
-        .replace(/[\s_/()-]+/g, " ");
-    }
-
-    function buildNormalizedRow(row) {
-      const normalized = {};
-      Object.keys(row).forEach(key => {
-        normalized[normalizeKey(key)] = row[key];
-      });
-      return normalized;
-    }
-
-    function getField(row, aliases, fallback = "") {
-      for (const alias of aliases) {
-        const value = row[normalizeKey(alias)];
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-          return value;
-        }
-      }
-      return fallback;
-    }
-
     function parseNumber(value) {
-      if (value === null || value === undefined) return 0;
-      const cleaned = String(value)
-        .replace(/,/g, "")
-        .replace(/[^\d.-]/g, "")
-        .trim();
-
+      if (value === null || value === undefined || value === "") return 0;
+      const cleaned = String(value).replace(/,/g, "").trim();
       const num = parseFloat(cleaned);
       return Number.isFinite(num) ? num : 0;
     }
@@ -551,25 +512,11 @@
       emptyEl.style.display = state === "empty" ? "block" : "none";
       errorEl.style.display = state === "error" ? "block" : "none";
       dashboardContent.style.display = state === "ready" ? "block" : "none";
-
-      if (message) {
-        errorEl.textContent = message;
-      }
-    }
-
-    function aggregateBy(arr, key, metricKey) {
-      const out = {};
-      arr.forEach(d => {
-        const group = d[key] || "Unknown";
-        out[group] = (out[group] || 0) + (d[metricKey] || 0);
-      });
-      return out;
+      if (message) errorEl.textContent = message;
     }
 
     function resetMapLayer() {
-      if (mapLayer) {
-        map.removeLayer(mapLayer);
-      }
+      if (mapLayer) map.removeLayer(mapLayer);
       mapLayer = L.layerGroup().addTo(map);
     }
 
@@ -597,44 +544,38 @@
 
             console.log("DETECTED HEADERS:", Object.keys(results.data[0]));
 
-            rawData = results.data
-              .map(row => buildNormalizedRow(row))
-              .map(row => {
-                const country = getField(row, ["Country", "Country Name", "Incident Country"], "Unknown");
-                const yearRaw = getField(row, ["Year", "Incident Year", "Date Year", "iyear"], "");
-                const motive = getField(row, ["Motive", "Incident Motive", "Reason"], "Unspecified");
-                const organization = getField(row, ["Organization", "Org", "Agency", "Entity"], "Unknown");
-                const latitude = parseNumber(getField(row, ["Latitude", "Lat", "GPS Latitude"], ""));
-                const longitude = parseNumber(getField(row, ["Longitude", "Lon", "Lng", "GPS Longitude"], ""));
-                const affected = parseNumber(getField(row, ["Total affected", "Affected", "Total Affected"], 0));
-                const killed = parseNumber(getField(row, ["Total killed", "Killed", "Total Killed"], 0));
-
-                const org1 = parseNumber(getField(row, ["UN", "UN staff", "UN total"], 0));
-                const org2 = parseNumber(getField(row, ["INGO", "INGO total"], 0));
-                const org3 = parseNumber(getField(row, ["ICRC", "ICRC total"], 0));
-                const fallbackOrgTotal = org1 + org2 + org3;
-
-                return {
-                  country,
-                  year: String(yearRaw).trim(),
-                  motive,
-                  organization,
-                  lat: latitude,
-                  lon: longitude,
-                  affected,
-                  killed,
-                  orgTotal: fallbackOrgTotal
-                };
-              })
-              .filter(d => d.country || d.motive || d.affected || d.killed);
+            rawData = results.data.map(row => ({
+              incidentId: row["Incident ID"] || "",
+              year: String(row["Year"] || "").trim(),
+              country: row["Country"] || "Unknown",
+              region: row["Region"] || "",
+              district: row["District"] || "",
+              city: row["City"] || "",
+              motive: row["Motive"] || "Unspecified",
+              latitude: parseNumber(row["Latitude"]),
+              longitude: parseNumber(row["Longitude"]),
+              totalKilled: parseNumber(row["Total killed"]),
+              totalAffected: parseNumber(row["Total affected"]),
+              un: parseNumber(row["UN"]),
+              ingo: parseNumber(row["INGO"]),
+              icrc: parseNumber(row["ICRC"]),
+              nrcsIfcr: parseNumber(row["NRCS and IFRC"]),
+              nngo: parseNumber(row["NNGO"]),
+              other: parseNumber(row["Other"]),
+              details: row["Details"] || ""
+            })).filter(d =>
+              d.country ||
+              d.motive ||
+              d.totalKilled ||
+              d.totalAffected ||
+              Number.isFinite(d.latitude) ||
+              Number.isFinite(d.longitude)
+            );
 
             console.log("CLEANED DATA:", rawData);
 
             if (!rawData.length) {
-              showState(
-                "error",
-                "The CSV loaded, but no usable rows were found. Check the browser console for DETECTED HEADERS and update the field mapping."
-              );
+              showState("error", "The CSV loaded, but no usable rows were found.");
               return;
             }
 
@@ -688,7 +629,11 @@
     }
 
     function updateKPI(data) {
-      const grouped = aggregateBy(data, "country", "affected");
+      const grouped = {};
+      data.forEach(d => {
+        grouped[d.country] = (grouped[d.country] || 0) + d.totalAffected;
+      });
+
       const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
       const top = sorted[0];
 
@@ -696,14 +641,13 @@
       document.getElementById("affected").innerText = top ? formatNumber(top[1]) : "0";
       document.getElementById("incidents").innerText = formatNumber(data.length);
       document.getElementById("killed").innerText = formatNumber(
-        data.reduce((sum, row) => sum + (row.killed || 0), 0)
+        data.reduce((sum, row) => sum + row.totalKilled, 0)
       );
     }
 
     function initOrUpdateMap(data) {
       if (!map) {
         map = L.map("map").setView([15, 0], 2);
-
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap contributors"
         }).addTo(map);
@@ -711,12 +655,15 @@
 
       resetMapLayer();
 
-      const validPoints = data.filter(d => Number.isFinite(d.lat) && Number.isFinite(d.lon));
+      const validPoints = data.filter(d =>
+        Number.isFinite(d.latitude) &&
+        Number.isFinite(d.longitude)
+      );
 
       validPoints.forEach(d => {
-        const magnitude = Math.max(15000, Math.min(50000, (d.affected || 1) * 3000));
+        const magnitude = Math.max(15000, Math.min(50000, (d.totalAffected || 1) * 3000));
 
-        L.circle([d.lat, d.lon], {
+        L.circle([d.latitude, d.longitude], {
           radius: magnitude,
           color: "#c0392b",
           weight: 1,
@@ -727,14 +674,14 @@
           <strong>${escapeHtml(d.country)}</strong><br>
           Year: ${escapeHtml(d.year || "—")}<br>
           Motive: ${escapeHtml(d.motive || "—")}<br>
-          Affected: ${formatNumber(d.affected)}<br>
-          Killed: ${formatNumber(d.killed)}
+          Total affected: ${formatNumber(d.totalAffected)}<br>
+          Total killed: ${formatNumber(d.totalKilled)}
         `)
         .addTo(mapLayer);
       });
 
       if (validPoints.length) {
-        const bounds = L.latLngBounds(validPoints.map(d => [d.lat, d.lon]));
+        const bounds = L.latLngBounds(validPoints.map(d => [d.latitude, d.longitude]));
         map.fitBounds(bounds, { padding: [20, 20] });
       } else {
         map.setView([15, 0], 2);
@@ -744,27 +691,31 @@
     function drawBar(data) {
       if (barChart) barChart.destroy();
 
-      const useOrganization = data.some(d => d.organization && d.organization !== "Unknown");
-      const groupKey = useOrganization ? "organization" : "country";
+      const totals = {
+        "UN": 0,
+        "INGO": 0,
+        "ICRC": 0,
+        "NRCS and IFRC": 0,
+        "NNGO": 0,
+        "Other": 0
+      };
 
-      const totals = {};
       data.forEach(d => {
-        const key = d[groupKey] || "Unknown";
-        const value = d.orgTotal > 0 ? d.orgTotal : d.killed;
-        totals[key] = (totals[key] || 0) + value;
+        totals["UN"] += d.un;
+        totals["INGO"] += d.ingo;
+        totals["ICRC"] += d.icrc;
+        totals["NRCS and IFRC"] += d.nrcsIfcr;
+        totals["NNGO"] += d.nngo;
+        totals["Other"] += d.other;
       });
-
-      const sorted = Object.entries(totals)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
 
       barChart = new Chart(document.getElementById("barChart"), {
         type: "bar",
         data: {
-          labels: sorted.map(d => d[0]),
+          labels: Object.keys(totals),
           datasets: [{
-            label: "Casualties",
-            data: sorted.map(d => d[1]),
+            label: "Affected count by organization category",
+            data: Object.values(totals),
             backgroundColor: "#004987"
           }]
         },
@@ -828,8 +779,8 @@
           <td>${escapeHtml(d.country)}</td>
           <td>${escapeHtml(d.year || "—")}</td>
           <td>${escapeHtml(d.motive || "—")}</td>
-          <td>${escapeHtml(d.organization || "—")}</td>
-          <td>${formatNumber(d.affected)}</td>
+          <td>${formatNumber(d.totalKilled)}</td>
+          <td>${formatNumber(d.totalAffected)}</td>
         `;
         tableBody.appendChild(tr);
       });
