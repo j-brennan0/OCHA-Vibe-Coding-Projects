@@ -33,7 +33,6 @@
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -71,7 +70,8 @@
     .brand img {
       height: 40px;
       object-fit: contain;
-      max-width: 220px;
+      max-width: 240px;
+      display: block;
     }
 
     .header-actions {
@@ -90,6 +90,10 @@
       cursor: pointer;
       border-radius: 2px;
       font-weight: 500;
+    }
+
+    .header button:hover {
+      opacity: 0.92;
     }
 
     .banner {
@@ -330,6 +334,7 @@
 </head>
 <body id="top">
 
+  <!-- HEADER -->
   <div class="header">
     <div class="brand">
       <img src="./assets/img/OCHA Logo_beside_blue.png" alt="OCHA logo">
@@ -341,6 +346,7 @@
     </div>
   </div>
 
+  <!-- MAIN -->
   <div class="container">
     <div class="page-header">
       <h1>Global IO Worker Incident Dashboard</h1>
@@ -349,6 +355,7 @@
       </div>
     </div>
 
+    <!-- FILTERS -->
     <div class="filters" aria-label="Dashboard filters">
       <div class="filter-group">
         <label for="countryFilter">Country</label>
@@ -365,10 +372,12 @@
       </div>
     </div>
 
+    <!-- STATES -->
     <div id="loading">Loading data...</div>
     <div id="empty">No data available for the selected filters.</div>
     <div id="error"></div>
 
+    <!-- DASHBOARD -->
     <div id="dashboardContent" style="display:none;">
       <div class="dashboard">
         <div class="section">
@@ -429,6 +438,7 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
   <div class="footer">
     <div class="footer-row">
       <div class="footer-block">
@@ -450,10 +460,10 @@
         <div class="footer-title">Data &amp; Attribution</div>
         <div>Data may come from multiple sources and may contain limitations or varying levels of detail.</div>
         <div class="socials">
-          <a class="social-link" href="https://x.com/ocha" target="_blank" rel="noopener noreferrer" aria-label="X">X</a>
-          <a class="social-link" href="https://www.linkedin.com/company/united-nations-office-for-the-coordination-of-humanitarian-affairs-ocha/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">in</a>
-          <a class="social-link" href="https://www.facebook.com/UNOCHA" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
-          <a class="social-link" href="https://www.youtube.com/@unocha" target="_blank" rel="noopener noreferrer" aria-label="YouTube">▶</a>
+          <a class="social-link" href="https://x.com/OCHA" target="_blank" rel="noopener noreferrer" aria-label="OCHA on X">X</a>
+          <a class="social-link" href="https://www.linkedin.com/company/un-ocha/" target="_blank" rel="noopener noreferrer" aria-label="OCHA on LinkedIn">in</a>
+          <a class="social-link" href="https://www.facebook.com/UNOCHA/" target="_blank" rel="noopener noreferrer" aria-label="OCHA on Facebook">f</a>
+          <a class="social-link" href="https://www.youtube.com/@UNOCHA" target="_blank" rel="noopener noreferrer" aria-label="OCHA on YouTube">▶</a>
         </div>
       </div>
     </div>
@@ -585,7 +595,6 @@
               return;
             }
 
-            // Show detected headers in console
             console.log("DETECTED HEADERS:", Object.keys(results.data[0]));
 
             rawData = results.data
@@ -624,7 +633,7 @@
             if (!rawData.length) {
               showState(
                 "error",
-                "The CSV loaded, but no usable rows were found.\nCheck the column names in the console under DETECTED HEADERS."
+                "The CSV loaded, but no usable rows were found. Check the browser console for DETECTED HEADERS and update the field mapping."
               );
               return;
             }
